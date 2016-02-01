@@ -1,0 +1,13 @@
+{
+  "name": "the-witness-helper",
+  "description": "A companion for the game The Witness, with which, solving the puzzles can be made easy",
+  "author": {
+    "name": "Abderrahmane TAHRI JOUTI",
+    "email": "tj.abderrahmane@gmail.com"
+  },
+  "version": "0.0.1",
+  "dependencies": {
+    "phaser": "^2.4.4",
+    "requirejs": "^2.1.22"
+  }
+}
