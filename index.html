@@ -7,7 +7,15 @@
 </head>
 <body>
 <div id="canvas"></div>
-<script data-main="app/js/witness"
+<script>
+    var require = {
+        baseUrl: 'app/js',
+        paths: {
+            'Phaser': '../../node_modules/phaser/build/phaser'
+        }
+    };
+</script>
+<script data-main="witness"
         src="node_modules/requirejs/require.js"></script>
 </body>
 </html>

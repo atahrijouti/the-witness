@@ -3,71 +3,52 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-define(["require", "exports", "./mosaique.object", "./config"], function (require, exports, mosaique_object_1, config_1) {
+define(["require", "exports", "mosaique.object", "config", "./helpers", "Phaser"], function (require, exports, mosaique_object_1, c, helpers_1) {
     var MainState = (function (_super) {
         __extends(MainState, _super);
         function MainState() {
             _super.apply(this, arguments);
         }
         MainState.prototype.preload = function () {
-            this.backgroundBitmap = this.makeBackgroundSprite();
-            this.squareBitmap = this.makeSquareSprite();
+            this.backgroundBitmap = this.game.cache.getBitmapData('backgroundBitmap');
+            this.squareBitmap = this.game.cache.getBitmapData('squareBitmap');
         };
         MainState.prototype.create = function () {
             var game = this.game;
-            this.game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
             this.backgroundSprite = game.add.tileSprite(0, 0, game.width, game.height, this.backgroundBitmap);
-            var Z = new mosaique_object_1.Mosaique('Z', 1, 1, game);
-            Z.anchor.set(1 / 3, 1 / 2);
-            Z.position.x += Z.width / 3;
-            Z.position.y += Z.height / 2;
-            var T = new mosaique_object_1.Mosaique('T', 0, 1, game);
-            var ZMirrored = new mosaique_object_1.Mosaique('ZMirrored', 1, 0, game);
-            var L = new mosaique_object_1.Mosaique('L', 1, 3, game);
-            var LMirrored = new mosaique_object_1.Mosaique('LMirrored', 0, 3, game);
-            var Square = new mosaique_object_1.Mosaique('Square', 7, 0, game);
-            var I = new mosaique_object_1.Mosaique('I', 2, 3, game);
-            //Z.generateTexture();
-            game.add.existing(Z);
+            var cWidth = c.Construction.columns;
+            var cHeight = c.Construction.rows;
+            this.construction = new mosaique_object_1.Mosaique(game, 0, 0, cWidth, cHeight);
+            this.add.existing(this.construction);
+            this.construction.inputEnabled = true;
+            this.construction.events.onInputDown.add(this.handleConstruction, this);
+            this.extractShape = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
+            this.extractShape.onDown.add(this.handleKeyboard, this);
         };
-        MainState.prototype.makeBackgroundSprite = function () {
-            var game = this.game;
-            var bmd = game.make.bitmapData(config_1.Config.Game.SQUARE_SIDE, config_1.Config.Game.SQUARE_SIDE, 'backgroundBitmap', true);
-            var ctx = bmd.ctx;
-            ctx.strokeStyle = '#444466';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, config_1.Config.Game.SQUARE_SIDE);
-            ctx.moveTo(0, config_1.Config.Game.SQUARE_SIDE);
-            ctx.lineTo(config_1.Config.Game.SQUARE_SIDE, config_1.Config.Game.SQUARE_SIDE);
-            ctx.stroke();
-            ctx.closePath();
-            bmd.render();
-            bmd.update(0, 0, config_1.Config.Game.SQUARE_SIDE, config_1.Config.Game.SQUARE_SIDE);
-            return bmd;
+        MainState.prototype.handleKeyboard = function (key) {
+            if (key.keyCode == Phaser.Keyboard.ENTER) {
+                var shapeGrid = helpers_1.Helpers.copyArray(this.construction.grid);
+                shapeGrid = helpers_1.Helpers.trimGrid(shapeGrid);
+                var _a = helpers_1.Helpers.croppedGridSize(shapeGrid), cols = _a[0], rows = _a[1];
+                var X = c.Construction.columns + c.Puzzle.margin;
+                var shape = new mosaique_object_1.Mosaique(this.game, X, 0, cols, rows, shapeGrid);
+                this.add.existing(shape);
+                shape.respondToDrag();
+            }
         };
-        MainState.prototype.makeSquareSprite = function () {
-            var game = this.game;
-            var bmd = game.make.bitmapData(config_1.Config.Game.SQUARE_SIDE, config_1.Config.Game.SQUARE_SIDE, 'squareBitmap', true);
-            var ctx = bmd.ctx;
-            ctx.fillStyle = '#2378ef';
-            ctx.fillRect(0, 0, config_1.Config.Game.SQUARE_SIDE, config_1.Config.Game.SQUARE_SIDE);
-            ctx.strokeStyle = '#1060D1';
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.moveTo(config_1.Config.Game.SQUARE_SIDE, 0);
-            ctx.lineTo(config_1.Config.Game.SQUARE_SIDE, config_1.Config.Game.SQUARE_SIDE);
-            ctx.moveTo(0, config_1.Config.Game.SQUARE_SIDE);
-            ctx.lineTo(config_1.Config.Game.SQUARE_SIDE, config_1.Config.Game.SQUARE_SIDE);
-            ctx.stroke();
-            ctx.closePath();
-            bmd.render();
-            bmd.update(0, 0, config_1.Config.Game.SQUARE_SIDE, config_1.Config.Game.SQUARE_SIDE);
-            return bmd;
+        MainState.prototype.handleConstruction = function (construction, pointer) {
+            var squareSide = c.Game.squareSide;
+            if (pointer.isDown) {
+                var x = pointer.x - construction.position.x;
+                var y = pointer.y - construction.position.y;
+                var column = Phaser.Math.snapToFloor(x, squareSide) / squareSide;
+                var row = Phaser.Math.snapToFloor(y, squareSide) / squareSide;
+                construction.toggleTile(column, row);
+            }
         };
         return MainState;
     })(Phaser.State);
+    exports.MainState = MainState;
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = MainState;
 });

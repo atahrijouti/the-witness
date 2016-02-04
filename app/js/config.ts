@@ -1,19 +1,27 @@
-export var Config = {
-    Game: {
-        COLUMNS: 12,
-        ROWS: 20,
-        SQUARE_SIDE: 40,
-        get WIDTH(){
-            return this.COLUMNS * this.SQUARE_SIDE;
-        },
-        get HEIGHT(){
-            return this.ROWS * this.SQUARE_SIDE;
-        },
-        get RANDOMCOLOR(){
-            var colors = [
-                0x4d90fe, 0xCC8081, 0x888888, 0x0971B2, 0x9937B2, 0xFFFEBA, 0xFFFC19, 0x00CCFF, 0x24459A, 0xfaa614,
-                0x24459A, 0xe81123, 0x52b043, 0x24459A, 0xea3e24, 0x00188f, 0xba141a, 0xe51400, 0x68217a, 0xc1d304]
-            return (Math.random()*colors.length) | 0;
-        }
+let Puzzle = {
+    columns: 10,
+    rows: 8,
+    margin: 1
+};
+let Construction = {
+    columns: 5,
+    rows: 6
+};
+let Game = {
+    debug: true,
+    squareSide: 40,
+    get columns(){
+        return Construction.columns + Puzzle.margin + Puzzle.columns;
+    },
+    get rows(){
+        return Math.max(Puzzle.rows + 2, Construction.rows);
+    },
+    get width(){
+        return Game.columns * Game.squareSide;
+    },
+    get height(){
+        return Game.rows * Game.squareSide;
     }
-}
+};
+
+export {Puzzle, Construction, Game};

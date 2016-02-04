@@ -1,65 +1,82 @@
-import {Config as c} from "./config";
+import "Phaser";
+import * as c from "config";
 
 export class Mosaique extends Phaser.Sprite {
     grid: number[][];
     rows: number;
     cols: number;
+    X: number; // column
+    Y: number; // ROW
     bitMap: Phaser.BitmapData;
-
-    static types = {
-        T : [2,3,[ [ 0, 0 ], [ 0, 1 ], [ 0, 2 ], [ 1, 1 ] ]],
-        Z : [2,3,[ [ 0, 0 ], [ 0, 1 ], [ 1, 1 ], [ 1, 2 ]]],
-        ZMirrored : [2,3,[[ 0, 1 ], [ 0, 2 ], [ 1, 0 ], [ 1, 1 ]]],
-        L : [2,3,[[ 0, 0 ], [ 1, 0 ], [ 1, 1 ], [ 1, 2 ]]],
-        LMirrored : [2,3,[[ 0, 0 ], [ 0, 1 ], [ 0, 2 ], [ 1, 0 ]]],
-        Square : [2,2,[[ 0, 0 ], [ 0, 1 ], [ 1, 0 ], [ 1, 1 ]]],
-        I : [1,4,[[ 0, 0 ], [ 0, 1 ], [ 0, 2 ], [ 0, 3 ]]]
-    };
     shape:string;
+    squarePaint: Phaser.BitmapData;
+    active: boolean;
+    static types = {
+        T : [3,2,[ [ 0, 0 ], [ 1, 0 ], [ 2, 0 ], [ 1, 1 ] ]],
+        Z : [3,2,[ [ 0, 0 ], [ 1, 0 ], [ 1, 1 ], [ 2, 1 ]]],
+        ZMirrored : [3,2,[[ 1, 0 ], [ 2, 0 ], [ 0, 1 ], [ 1, 1 ]]],
+        L : [3,2,[[ 0, 0 ], [ 0, 1 ], [ 1, 1 ], [ 2, 1 ]]],
+        LMirrored : [3,2,[[ 0, 0 ], [ 1, 0 ], [ 2, 0 ], [ 0, 1 ]]],
+        Square : [2,2,[[ 0, 0 ], [ 1, 0 ], [ 0, 1 ], [ 1, 1 ]]],
+        I : [4,1,[[ 0, 0 ], [ 1, 0 ], [ 2, 0 ], [ 3, 0 ]]]
+    };
 
-    constructor(shape:string, row: number, col: number,game:Phaser.Game){
-        super(game,col*c.Game.SQUARE_SIDE,row*c.Game.SQUARE_SIDE);
-        this.shape = shape;
-        this.grid = [];
-        this.fillGrid();
-        if(Mosaique.types[shape]){
-            this.rows = this.grid.length;
-            this.cols = this.grid[0].length;
-            var side = c.Game.SQUARE_SIDE;
-            this.bitMap = this.game.make.bitmapData(side*this.cols,side*this.rows);
-            this.paint();
-        }else if(shape === 'blob'){
-            this.bitMap = this.game.make.bitmapData(c.Game.WIDTH,c.Game.HEIGHT,'blobBitmap');
-            this.rows = c.Game.ROWS;
-            this.cols = c.Game.COLUMNS;
-        }
+    constructor(game: Phaser.Game, X, Y, cols, rows, grid:number[][]=[]){
+        super(game, X * c.Game.squareSide, Y * c.Game.squareSide);
+        this.active = false;
+        this.rows = rows;
+        this.cols = cols;
+        this.grid = grid;
+        this.X = X;
+        this.Y = Y;
+        this.squarePaint = this.game.cache.getBitmapData('squareBitmap');
+        let side = c.Game.squareSide;
+        this.bitMap = this.game.make.bitmapData(side * this.cols, side * this.rows);
+        //this.bitMap.draw(this.squarePaint, 0, 0,cols*side, rows*side);
+        //this.bitMap.add(this);
+        //this.bitMap.update();
+        this.paint();
     }
+
     paint(){
-        if(!Mosaique.types[this.shape]){
-            return;
+        let side = c.Game.squareSide;
+        this.bitMap.clear();
+        if(c.Game.debug){
+            let ctx = this.bitMap.ctx;
+            ctx.strokeStyle = 'rgba(0,255,0,0.65)';
+            ctx.beginPath();
+            ctx.moveTo(0,0);
+            ctx.lineTo(0, this.rows * side);
+            ctx.lineTo(this.cols * side, this.rows * side);
+            ctx.lineTo(this.cols * side, 0);
+            ctx.lineTo(0, 0);
+            ctx.stroke();
+            ctx.closePath();
+            this.bitMap.render();
         }
-        var squareBitmap = this.game.cache.getBitmapData('squareBitmap');
-
-        var side = c.Game.SQUARE_SIDE;
-        for(var i=0; i<4; i++){
-            var cell = Mosaique.types[this.shape][2][i];
-            this.bitMap.draw(squareBitmap,cell[1]*side,cell[0]*side);
-
+        for(var i = 0; i < this.grid.length; i++){
+            let cell = this.grid[i];
+            this.bitMap.draw(this.squarePaint, cell[0] * side, cell[1] * side);
         }
-        this.bitMap.add(this);
-        this.bitMap.update(0,0,this.cols*side,this.rows*side);
+        this.bitMap.add(this); // update the mosaique to use the bitmap as its texture
+        this.bitMap.update();
     }
-    fillGrid(){
-        var shape = this.shape;
-        if(!Mosaique.types[this.shape]){
-            return;
+
+    respondToDrag(){
+        this.inputEnabled = true;
+        this.input.enableDrag();
+        this.input.enableSnap(c.Game.squareSide, c.Game.squareSide, false, true);
+    }
+
+    toggleTile(x:number, y:number){
+        let found = this.grid.filter((cell)=>{
+            return cell[0] !== x || cell[1] !== y;
+        });
+        if(found.length !== this.grid.length){
+            this.grid = found;
+        }else{
+            this.grid.push([x,y]);
         }
-        for(var i =0; i<Mosaique.types[shape][0];i++){
-            this.grid.push(new Array(Mosaique.types[shape][1]));
-        }
-        for(var i=0; i<4; i++){
-            var cell = Mosaique.types[shape][2][i];
-            this.grid[cell[0]][cell[1]] = 1;
-        }
+        this.paint();
     }
 }

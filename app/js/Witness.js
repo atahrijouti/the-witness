@@ -3,13 +3,13 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-define(["require", "exports", "./main.state", "./config", 'node_modules/phaser/build/phaser.min.js'], function (require, exports, main_state_1, config_1) {
+define(["require", "exports", "config", "boot.state", "Phaser"], function (require, exports, c, boot_state_1) {
     var Witness = (function (_super) {
         __extends(Witness, _super);
         function Witness() {
-            _super.call(this, config_1.Config.Game.WIDTH, config_1.Config.Game.HEIGHT, Phaser.AUTO, 'canvas', null);
-            this.state.add('main', main_state_1.default, false);
-            this.state.start('main');
+            _super.call(this, c.Game.width, c.Game.height, Phaser.AUTO, 'canvas', null);
+            this.state.add('boot', boot_state_1.Boot, false);
+            this.state.start('boot');
         }
         return Witness;
     })(Phaser.Game);

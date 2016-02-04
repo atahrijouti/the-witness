@@ -1,74 +1,60 @@
-import {Mosaique} from "./mosaique.object";
-import {Config as c} from "./config";
+import "Phaser";
+import {Mosaique} from "mosaique.object";
+import * as c from "config";
+import {Helpers} from "./helpers";
 
-class MainState extends Phaser.State {
-    grid: Mosaique;
+export class MainState extends Phaser.State {
     backgroundBitmap:Phaser.BitmapData;
     squareBitmap:Phaser.BitmapData;
     backgroundSprite:Phaser.TileSprite;
+    construction:Mosaique;
+    extractShape: Phaser.Key;
+    shapes: Mosaique[];
+
     preload(){
-        this.backgroundBitmap =this.makeBackgroundSprite();
-        this.squareBitmap = this.makeSquareSprite();
+        this.backgroundBitmap = this.game.cache.getBitmapData('backgroundBitmap');
+        this.squareBitmap = this.game.cache.getBitmapData('squareBitmap');
     }
+
     create() {
         let game = this.game;
-        this.game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
         this.backgroundSprite = game.add.tileSprite(0,0,game.width,game.height,this.backgroundBitmap);
 
+        let cWidth = c.Construction.columns;
+        let cHeight = c.Construction.rows;
 
-        let Z = new Mosaique('Z',1,1, game);
-        Z.anchor.set(1/3,1/2);
-        Z.position.x += Z.width/3;
-        Z.position.y += Z.height/2;
-        var T = new Mosaique('T',0,1,game);
-        var ZMirrored = new Mosaique('ZMirrored',1,0,game);
-        var L = new Mosaique('L',1,3,game);
-        var LMirrored = new Mosaique('LMirrored',0,3,game);
-        var Square = new Mosaique('Square',7,0,game);
-        var I = new Mosaique('I',2,3,game);
+        this.construction = new Mosaique(game, 0, 0, cWidth, cHeight);
+        this.add.existing(this.construction);
+        this.construction.inputEnabled = true;
+        this.construction.events.onInputDown.add(this.handleConstruction, this);
 
-        //Z.generateTexture();
-        game.add.existing(Z);
-
+        this.extractShape = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
+        this.extractShape.onDown.add(this.handleKeyboard, this);
     }
 
+    handleKeyboard(key: Phaser.Key){
+        if(key.keyCode == Phaser.Keyboard.ENTER){
+            let shapeGrid = Helpers.copyArray(this.construction.grid);
+            shapeGrid = Helpers.trimGrid(shapeGrid);
+            let [cols, rows] = Helpers.croppedGridSize(shapeGrid);
+            let X = c.Construction.columns + c.Puzzle.margin;
+            let shape = new Mosaique(this.game, X, 0, cols, rows, shapeGrid);
+            this.add.existing(shape);
+            shape.respondToDrag();
+        }
+    }
 
-    makeBackgroundSprite(): Phaser.BitmapData{
-        var game = this.game;
-        var bmd = game.make.bitmapData(c.Game.SQUARE_SIDE,c.Game.SQUARE_SIDE,'backgroundBitmap',true);
-        var ctx = bmd.ctx;
-        ctx.strokeStyle = '#444466';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0,0);
-        ctx.lineTo(0,c.Game.SQUARE_SIDE);
-        ctx.moveTo(0,c.Game.SQUARE_SIDE);
-        ctx.lineTo(c.Game.SQUARE_SIDE,c.Game.SQUARE_SIDE);
-        ctx.stroke();
-        ctx.closePath();
-        bmd.render();
-        bmd.update(0,0,c.Game.SQUARE_SIDE,c.Game.SQUARE_SIDE);
-        return bmd;
+    handleConstruction(construction, pointer){
+        let squareSide = c.Game.squareSide;
+        if(pointer.isDown){
+            let x = pointer.x - construction.position.x;
+            let y = pointer.y - construction.position.y;
+            let column = Phaser.Math.snapToFloor(x,squareSide) / squareSide;
+            let row = Phaser.Math.snapToFloor(y,squareSide) / squareSide;
+            construction.toggleTile(column,row);
+        }
     }
-    makeSquareSprite(): Phaser.BitmapData{
-        var game = this.game;
-        var bmd = game.make.bitmapData(c.Game.SQUARE_SIDE,c.Game.SQUARE_SIDE,'squareBitmap',true);
-        var ctx = bmd.ctx;
-        ctx.fillStyle = '#2378ef';
-        ctx.fillRect(0,0,c.Game.SQUARE_SIDE,c.Game.SQUARE_SIDE);
-        ctx.strokeStyle = '#1060D1';
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.moveTo(c.Game.SQUARE_SIDE,0);
-        ctx.lineTo(c.Game.SQUARE_SIDE,c.Game.SQUARE_SIDE);
-        ctx.moveTo(0,c.Game.SQUARE_SIDE);
-        ctx.lineTo(c.Game.SQUARE_SIDE,c.Game.SQUARE_SIDE);
-        ctx.stroke();
-        ctx.closePath();
-        bmd.render();
-        bmd.update(0,0,c.Game.SQUARE_SIDE,c.Game.SQUARE_SIDE);
-        return bmd;
-    }
+
 }
 
 export default MainState;

@@ -1,13 +1,13 @@
-import 'node_modules/phaser/build/phaser.min.js'
-import {Mosaique} from "./mosaique.object";
-import MainState from "./main.state";
-import {Config as c} from "./config";
+import "Phaser";
+import {MainState} from "main.state";
+import * as c from "config";
+import {Boot} from "boot.state";
 
 export class Witness extends Phaser.Game{
     constructor(){
-        super(c.Game.WIDTH,c.Game.HEIGHT,Phaser.AUTO, 'canvas', null);
-        this.state.add('main', MainState,false);
-        this.state.start('main');
+        super(c.Game.width,c.Game.height,Phaser.AUTO, 'canvas', null);
+        this.state.add('boot', Boot,false);
+        this.state.start('boot');
     }
 }
 
