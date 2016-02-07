@@ -1,1 +1,1 @@
-///<reference path="../../node_modules/phaser/typescript/phaser.d.ts"/>
+///<reference path="types/phaser.d.ts"/>

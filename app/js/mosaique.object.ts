@@ -1,5 +1,6 @@
 import "Phaser";
-import * as c from "config";
+import c from "config";
+import {Helpers} from "./helpers";
 
 export class Mosaique extends Phaser.Sprite {
     grid: number[][];
@@ -8,9 +9,11 @@ export class Mosaique extends Phaser.Sprite {
     X: number; // column
     Y: number; // ROW
     bitMap: Phaser.BitmapData;
-    shape:string;
+    //shape:string;
     squarePaint: Phaser.BitmapData;
     active: boolean;
+    color: string;
+    border: string;
     static types = {
         T : [3,2,[ [ 0, 0 ], [ 1, 0 ], [ 2, 0 ], [ 1, 1 ] ]],
         Z : [3,2,[ [ 0, 0 ], [ 1, 0 ], [ 1, 1 ], [ 2, 1 ]]],
@@ -21,7 +24,8 @@ export class Mosaique extends Phaser.Sprite {
         I : [4,1,[[ 0, 0 ], [ 1, 0 ], [ 2, 0 ], [ 3, 0 ]]]
     };
 
-    constructor(game: Phaser.Game, X, Y, cols, rows, grid:number[][]=[]){
+    constructor({
+        game, X, Y, cols, rows, grid=[], color = '', border = ''}){
         super(game, X * c.Game.squareSide, Y * c.Game.squareSide);
         this.active = false;
         this.rows = rows;
@@ -29,29 +33,33 @@ export class Mosaique extends Phaser.Sprite {
         this.grid = grid;
         this.X = X;
         this.Y = Y;
-        this.squarePaint = this.game.cache.getBitmapData('squareBitmap');
+        this.color = color;
+        this.border = border;
+
         let side = c.Game.squareSide;
+        if(color === ''){
+            this.squarePaint = this.game.cache.getBitmapData('squareBitmap');
+        }else{
+            this.squarePaint = Helpers.makeSquareBitmap({
+                game: this.game,
+                color
+            });
+        }
         this.bitMap = this.game.make.bitmapData(side * this.cols, side * this.rows);
-        //this.bitMap.draw(this.squarePaint, 0, 0,cols*side, rows*side);
-        //this.bitMap.add(this);
-        //this.bitMap.update();
         this.paint();
     }
 
     paint(){
         let side = c.Game.squareSide;
         this.bitMap.clear();
-        if(c.Game.debug){
-            let ctx = this.bitMap.ctx;
-            ctx.strokeStyle = 'rgba(0,255,0,0.65)';
-            ctx.beginPath();
-            ctx.moveTo(0,0);
-            ctx.lineTo(0, this.rows * side);
-            ctx.lineTo(this.cols * side, this.rows * side);
-            ctx.lineTo(this.cols * side, 0);
-            ctx.lineTo(0, 0);
-            ctx.stroke();
-            ctx.closePath();
+        if(c.Game.debug || this.border !== ''){
+            let borderColor = (c.Game.debug ? c.Game.debugColor : this.border);
+            Helpers.drawContour({
+                ctx: this.bitMap.ctx,
+                width: this.cols * side,
+                height: this.rows * side,
+                color: borderColor
+            });
             this.bitMap.render();
         }
         for(var i = 0; i < this.grid.length; i++){
@@ -60,6 +68,11 @@ export class Mosaique extends Phaser.Sprite {
         }
         this.bitMap.add(this); // update the mosaique to use the bitmap as its texture
         this.bitMap.update();
+    }
+
+    empty(){
+        this.grid = [];
+        this.paint();
     }
 
     respondToDrag(){

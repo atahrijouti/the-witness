@@ -3,7 +3,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-define(["require", "exports", "main.state", "./helpers", "Phaser"], function (require, exports, main_state_1, helpers_1) {
+define(["require", "exports", "main.state", "helpers", "Phaser"], function (require, exports, main_state_1, helpers_1) {
     var Preload = (function (_super) {
         __extends(Preload, _super);
         function Preload() {
@@ -11,7 +11,11 @@ define(["require", "exports", "main.state", "./helpers", "Phaser"], function (re
         }
         Preload.prototype.preload = function () {
             helpers_1.Helpers.makeBackgroundSprite(this.game);
-            helpers_1.Helpers.makeSquareSprite(this.game); //
+            helpers_1.Helpers.makeSquareBitmap({
+                game: this.game,
+                name: "squareBitmap",
+                cache: true
+            });
         };
         Preload.prototype.create = function () {
             var game = this.game;

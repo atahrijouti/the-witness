@@ -1,12 +1,15 @@
 import "Phaser";
 import MainState from "main.state";
-import {Config as c} from "config";
-import {Helpers} from "./helpers";
+import {Helpers} from "helpers";
 
 export class Preload extends Phaser.State {
     preload(){
         Helpers.makeBackgroundSprite(this.game);
-        Helpers.makeSquareSprite(this.game); //
+        Helpers.makeSquareBitmap({
+           game: this.game,
+            name: "squareBitmap",
+            cache: true
+        });
     }
     create(){
         var game = this.game;

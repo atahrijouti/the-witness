@@ -3,40 +3,44 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-define(["require", "exports", "config", "Phaser"], function (require, exports, c) {
+define(["require", "exports", "config", "./helpers", "Phaser"], function (require, exports, config_1, helpers_1) {
     var Mosaique = (function (_super) {
         __extends(Mosaique, _super);
-        function Mosaique(game, X, Y, cols, rows, grid) {
-            if (grid === void 0) { grid = []; }
-            _super.call(this, game, X * c.Game.squareSide, Y * c.Game.squareSide);
+        function Mosaique(_a) {
+            var game = _a.game, X = _a.X, Y = _a.Y, cols = _a.cols, rows = _a.rows, _b = _a.grid, grid = _b === void 0 ? [] : _b, _c = _a.color, color = _c === void 0 ? '' : _c, _d = _a.border, border = _d === void 0 ? '' : _d;
+            _super.call(this, game, X * config_1.default.Game.squareSide, Y * config_1.default.Game.squareSide);
             this.active = false;
             this.rows = rows;
             this.cols = cols;
             this.grid = grid;
             this.X = X;
             this.Y = Y;
-            this.squarePaint = this.game.cache.getBitmapData('squareBitmap');
-            var side = c.Game.squareSide;
+            this.color = color;
+            this.border = border;
+            var side = config_1.default.Game.squareSide;
+            if (color === '') {
+                this.squarePaint = this.game.cache.getBitmapData('squareBitmap');
+            }
+            else {
+                this.squarePaint = helpers_1.Helpers.makeSquareBitmap({
+                    game: this.game,
+                    color: color
+                });
+            }
             this.bitMap = this.game.make.bitmapData(side * this.cols, side * this.rows);
-            //this.bitMap.draw(this.squarePaint, 0, 0,cols*side, rows*side);
-            //this.bitMap.add(this);
-            //this.bitMap.update();
             this.paint();
         }
         Mosaique.prototype.paint = function () {
-            var side = c.Game.squareSide;
+            var side = config_1.default.Game.squareSide;
             this.bitMap.clear();
-            if (c.Game.debug) {
-                var ctx = this.bitMap.ctx;
-                ctx.strokeStyle = 'rgba(0,255,0,0.65)';
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(0, this.rows * side);
-                ctx.lineTo(this.cols * side, this.rows * side);
-                ctx.lineTo(this.cols * side, 0);
-                ctx.lineTo(0, 0);
-                ctx.stroke();
-                ctx.closePath();
+            if (config_1.default.Game.debug || this.border !== '') {
+                var borderColor = (config_1.default.Game.debug ? config_1.default.Game.debugColor : this.border);
+                helpers_1.Helpers.drawContour({
+                    ctx: this.bitMap.ctx,
+                    width: this.cols * side,
+                    height: this.rows * side,
+                    color: borderColor
+                });
                 this.bitMap.render();
             }
             for (var i = 0; i < this.grid.length; i++) {
@@ -46,10 +50,14 @@ define(["require", "exports", "config", "Phaser"], function (require, exports, c
             this.bitMap.add(this); // update the mosaique to use the bitmap as its texture
             this.bitMap.update();
         };
+        Mosaique.prototype.empty = function () {
+            this.grid = [];
+            this.paint();
+        };
         Mosaique.prototype.respondToDrag = function () {
             this.inputEnabled = true;
             this.input.enableDrag();
-            this.input.enableSnap(c.Game.squareSide, c.Game.squareSide, false, true);
+            this.input.enableSnap(config_1.default.Game.squareSide, config_1.default.Game.squareSide, false, true);
         };
         Mosaique.prototype.toggleTile = function (x, y) {
             var found = this.grid.filter(function (cell) {

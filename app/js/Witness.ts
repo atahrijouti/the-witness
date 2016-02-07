@@ -1,6 +1,6 @@
 import "Phaser";
 import {MainState} from "main.state";
-import * as c from "config";
+import c from "config";
 import {Boot} from "boot.state";
 
 export class Witness extends Phaser.Game{

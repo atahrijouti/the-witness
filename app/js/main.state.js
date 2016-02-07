@@ -3,7 +3,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-define(["require", "exports", "mosaique.object", "config", "./helpers", "Phaser"], function (require, exports, mosaique_object_1, c, helpers_1) {
+define(["require", "exports", "mosaique.object", "config", "helpers", "Phaser"], function (require, exports, mosaique_object_1, config_1, helpers_1) {
     var MainState = (function (_super) {
         __extends(MainState, _super);
         function MainState() {
@@ -16,9 +16,10 @@ define(["require", "exports", "mosaique.object", "config", "./helpers", "Phaser"
         MainState.prototype.create = function () {
             var game = this.game;
             this.backgroundSprite = game.add.tileSprite(0, 0, game.width, game.height, this.backgroundBitmap);
-            var cWidth = c.Construction.columns;
-            var cHeight = c.Construction.rows;
-            this.construction = new mosaique_object_1.Mosaique(game, 0, 0, cWidth, cHeight);
+            this.construction = new mosaique_object_1.Mosaique({ game: game, X: 0, Y: 0,
+                cols: config_1.default.Construction.columns,
+                rows: config_1.default.Construction.rows
+            });
             this.add.existing(this.construction);
             this.construction.inputEnabled = true;
             this.construction.events.onInputDown.add(this.handleConstruction, this);
@@ -26,18 +27,21 @@ define(["require", "exports", "mosaique.object", "config", "./helpers", "Phaser"
             this.extractShape.onDown.add(this.handleKeyboard, this);
         };
         MainState.prototype.handleKeyboard = function (key) {
-            if (key.keyCode == Phaser.Keyboard.ENTER) {
+            if (key.keyCode == Phaser.Keyboard.ENTER && this.construction.grid.length) {
                 var shapeGrid = helpers_1.Helpers.copyArray(this.construction.grid);
                 shapeGrid = helpers_1.Helpers.trimGrid(shapeGrid);
                 var _a = helpers_1.Helpers.croppedGridSize(shapeGrid), cols = _a[0], rows = _a[1];
-                var X = c.Construction.columns + c.Puzzle.margin;
-                var shape = new mosaique_object_1.Mosaique(this.game, X, 0, cols, rows, shapeGrid);
+                var X = config_1.default.Construction.columns + config_1.default.Puzzle.margin;
+                var color = helpers_1.Helpers.RandomColor();
+                var shape = new mosaique_object_1.Mosaique({
+                    game: this.game, X: X, Y: 0, cols: cols, rows: rows, grid: shapeGrid, color: color });
                 this.add.existing(shape);
                 shape.respondToDrag();
+                this.construction.empty();
             }
         };
         MainState.prototype.handleConstruction = function (construction, pointer) {
-            var squareSide = c.Game.squareSide;
+            var squareSide = config_1.default.Game.squareSide;
             if (pointer.isDown) {
                 var x = pointer.x - construction.position.x;
                 var y = pointer.y - construction.position.y;

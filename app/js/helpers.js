@@ -1,9 +1,21 @@
-define(["require", "exports", "config", "vendor/tinycolor", "Phaser"], function (require, exports, c, tinycolor_1) {
+define(["require", "exports", "config", "vendor/tinycolor", "Phaser"], function (require, exports, config_1, tinycolor_1) {
     var Helpers = (function () {
         function Helpers() {
         }
+        Helpers.drawContour = function (_a) {
+            var ctx = _a.ctx, width = _a.width, height = _a.height, color = _a.color;
+            ctx.strokeStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, height);
+            ctx.lineTo(width, height);
+            ctx.lineTo(width, 0);
+            ctx.lineTo(0, 0);
+            ctx.stroke();
+            ctx.closePath();
+        };
         Helpers.makeBackgroundSprite = function (game) {
-            var squareSide = c.Game.squareSide;
+            var squareSide = config_1.default.Game.squareSide;
             var bmd = game.make.bitmapData(squareSide, squareSide, 'backgroundBitmap', true);
             var ctx = bmd.ctx;
             ctx.strokeStyle = '#444466';
@@ -17,12 +29,14 @@ define(["require", "exports", "config", "vendor/tinycolor", "Phaser"], function 
             ctx.closePath();
             bmd.render();
             bmd.update(0, 0, squareSide, squareSide);
+            return bmd;
         };
-        Helpers.makeSquareSprite = function (game, color) {
-            if (color === void 0) { color = "#2378ef"; }
-            var squareSide = c.Game.squareSide;
-            var darkerColor = new tinycolor_1.Tinycolor(color).darken().toString();
-            var bmd = game.make.bitmapData(squareSide, squareSide, 'squareBitmap', true);
+        Helpers.makeSquareBitmap = function (_a) {
+            var game = _a.game, _b = _a.color, color = _b === void 0 ? config_1.default.Game.squareColor : _b, _c = _a.name, name = _c === void 0 ? '' : _c, _d = _a.cache, cache = _d === void 0 ? false : _d;
+            var squareSide = config_1.default.Game.squareSide;
+            var darkerColor = new tinycolor_1.Tinycolor(color).darken().toString('hex');
+            var bmd;
+            bmd = game.make.bitmapData(squareSide, squareSide, name, cache);
             var ctx = bmd.ctx;
             ctx.fillStyle = color;
             ctx.fillRect(0, 0, squareSide, squareSide);

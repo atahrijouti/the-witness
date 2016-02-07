@@ -1,10 +1,20 @@
 import "Phaser";
-import * as c from "config";
+import c from "config";
 import {Tinycolor} from "vendor/tinycolor";
 import canUseNewCanvasBlendModes = PIXI.canUseNewCanvasBlendModes;
 
-
 export class Helpers {
+    static drawContour({ctx, width, height, color}){
+        ctx.strokeStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.lineTo(0, height);
+        ctx.lineTo(width, height);
+        ctx.lineTo(width, 0);
+        ctx.lineTo(0, 0);
+        ctx.stroke();
+        ctx.closePath();
+    }
     static makeBackgroundSprite(game: Phaser.Game){
         let squareSide = c.Game.squareSide;
         let bmd = game.make.bitmapData(squareSide,squareSide,'backgroundBitmap',true);
@@ -20,11 +30,14 @@ export class Helpers {
         ctx.closePath();
         bmd.render();
         bmd.update(0,0,squareSide,squareSide);
+        return bmd;
     }
-    static makeSquareSprite(game: Phaser.Game, color = "#2378ef" ){
+    static makeSquareBitmap({game, color = c.Game.squareColor, name = '' , cache = false}){
         let squareSide = c.Game.squareSide;
-        let darkerColor = new Tinycolor(color).darken().toString();
-        let bmd = game.make.bitmapData(squareSide,squareSide,'squareBitmap',true);
+        let darkerColor = new Tinycolor(color).darken().toString('hex');
+        let bmd:Phaser.BitmapData;
+
+        bmd = game.make.bitmapData(squareSide, squareSide, name, cache);
         let ctx = bmd.ctx;
         ctx.fillStyle = color;
         ctx.fillRect(0,0,squareSide,squareSide);
